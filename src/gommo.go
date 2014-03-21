@@ -4,6 +4,8 @@ import (
 	"io"
 	"log"
 	"net"
+    "./protocol"
+    //"encoding/binary"
 )
 
 var _ = io.Copy
@@ -42,7 +44,36 @@ func handleConnection(c net.Conn) {
             break
         }
 
-        log.Println(string(buf[0:n]))
+        if n <= 0 {
+            continue
+        }
+
+        // Read command
+        cmd := buf[0]
+
+        if cmd == protocol.Packet_AccountLogin {
+            //c.Write([]byte(0x82))
+            response := make([]byte, 2)
+            response[0] = 0x82
+            response[1] = 0x01
+
+
+            log.Printf("Packet: %#x", response[0])
+
+            //binary.Write(c, binary.BigEndian, response)
+            w, err := c.Write(response)
+
+            log.Println(w)
+
+            if err != nil {
+                log.Println(err)
+                c.Close()
+                break
+            }
+        }
+
+        log.Printf("Packet: %#x", cmd)
+        //log.Println(buf[0:n])
     }
 
     log.Printf("Connection from %v closed.", c.RemoteAddr())
